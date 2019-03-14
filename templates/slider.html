@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+.slidecontainer {
+  width: 100%;
+}
+
+.slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 25px;
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+}
+
+.slider:hover {
+  opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 25px;
+  height: 25px;
+  background: #4CAF50;
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 25px;
+  height: 25px;
+  background: #4CAF50;
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+
+<p>Start Time(in HRS) 24 HOUR FORMAT:</p>
+<form method="POST" action = "http://localhost:5000/",method='POST'>
+<input type="range" min="0" max="24" value="0" class="slider" id="myRange">
+<p>Value: <span id="demo"></span></p>
+
+<p>End Time(in HRS) 24 HOUR FORMAT:</p>
+<input type="range" min="0" max="24" value="24" class="slider" id="myRange2">
+<p>Value: <span id="demo2"></span></p>
+
+</form>
+
+<script>
+var slider = (document.getElementById("myRange"));
+var output = (document.getElementById("demo"));
+
+output.innerHTML = slider.value;
+
+
+slider.oninput = function() {
+  output.innerHTML = this.value;
+}
+var pt1=slider.value;
+</script>
+
+<script>
+var slider2 = (document.getElementById("myRange2"));
+var output2 = (document.getElementById("demo2"));
+
+output2.innerHTML = slider2.value;
+
+slider2.oninput = function() {
+  output2.innerHTML = this.value;
+}
+
+</script>
+
+<div>
+    <button id="run" type="button">Get Graph</button>
+</div>
+
+<script>
+
+
+var sec=  JSON.parse('{{ seconds | tojson | safe}}');
+var wok=  JSON.parse('{{ worker | tojson |safe }}');
+var len=  JSON.parse('{{ length | tojson |safe }}');
+var min=  JSON.parse('{{ minutes | tojson |safe }}');
+
+
+
+function makeChart() {
+
+var data_pts=[];
+var secs=[],woks=[],mins=[];
+var new_len=0;
+
+for(var i=0;i<len;i++){
+  if(parseInt(min[i],10)>=parseInt(slider.value,10) && parseInt(min[i],10)<=parseInt(slider2.value,10)){
+    mins.push(parseInt(min[i],10));
+    secs.push(parseInt(sec[i],10));
+    woks.push(parseInt(wok[i],10));
+    new_len=new_len+1;
+  }
+  
+}
+
+console.log(slider.value);
+console.log(slider2.value);
+
+for(var i=0;i<new_len;i++){
+    var temp={x:new Date(Date.UTC(2012,01,1,mins[i],secs[i])), y: woks[i]};
+    data_pts.push(temp);
+    
+}  
+
+
+        
+var chart = new CanvasJS.Chart("chartContainer", {
+            animationEnabled: true,
+            title:{
+                text: "Worker Count"
+            },
+            axisX:{
+                title: "time",
+                gridThickness: 2,
+                interval:2, 
+                intervalType: "hour",        
+                valueFormatString: "hh TT K", 
+                labelAngle: -20
+            },
+            axisY: {
+                title: "Number of Workers Wearing cap",
+                includeZero: false,
+                scaleBreaks: {
+                    autoCalculate: true
+                }
+            },
+            data: [
+      {        
+        type: "line",
+        dataPoints: data_pts
+      }
+      ]
+    });
+        
+chart.render();
+
+}
+
+var runButton = document.getElementById("run");
+runButton.addEventListener("click", makeChart);
+
+
+</script>
+
+<div id="chartContainer" style="height: 370px; width: 100%;"></div>
+<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script></body>
+</html>
